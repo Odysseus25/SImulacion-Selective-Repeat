@@ -27,6 +27,8 @@ posActualArchivo = 0	#donde estoy en el archivo original
 tamanoSec = ventana * 2
 posEnviar = 0	#posicion a enviar en la ventana
 array = [False for i in range(0,tamanoSec)]
+caracteresEnviados = 0
+posInicialVentana = 0
 
 #tamano de la secuencia a enviar, de ella se enviara uncamente la ventana.
 bufferSecuencia = [None]*(tamanoSec)
@@ -55,17 +57,21 @@ def llenarBufferSecuencia():
 def actualizarBuffer(posInicial):
 	global posActualArchivo
 	inicio = (posInicial + ventana) % tamanoSec		#define de donde a donde actualizar el buffer
-	while inicio < ventana:
-		bufferSecuencia[letra] = archivo[posActualArchivo]
+	i = 0
+	while i < ventana:
+		bufferSecuencia[inicio] = archivo[posActualArchivo]
 		posActualArchivo += 1 	
 		inicio += 1
-		print (bufferSecuencia[letra])
+		i += 1
+		print (bufferSecuencia[inicio])
 	
     	print (posActualArchivo)
 
 #determina el numero de posiciones que la ventana se debe mover a la derecha
-#pos es la posicion donde inicia la ventana, o sea, posEnviar
-def moverVentana(pos, ventana):
+#pos es la posicion donde inicia la ventana, o sea, posInicialVentana
+def moverVentana(pos):
+	global posInicialVentana
+	global caracteresEnviados
 	global posEnviar
 	acks = 0
 	i = 0
@@ -73,17 +79,11 @@ def moverVentana(pos, ventana):
 		acks += 1
 		pos += 1
 		i += 1
-	posEnviar += acks	#corre la ventana el numero de acks recibidos
-
-#define cuales paquetes reenviar debido al timeout, usar este metodo cuando ocurre timeout
-#pos es la posicion inicial de la ventana, o sea, posEnviar
-def verificarReenvio(pos):
-	i = 0
-	while i < ventana:	#verifica cuales acks faltan
-		if array[pos] == False:
-			reenviar(pos)
-		pos += 1
-		i += 1
+	posInicialVentana += acks	#corre la ventana el numero de acks recibidos
+	caracteresEnviados += acks 	#aumenta el numero de caracteres enviados
+	if posInicialVentana >= tamanoSec:	#que sea ciclico
+		posInicialVentana = posInicialVentana % tamanoSec
+	posEnviar = posInicialVentana 	#actualiza la nueva posicion a mandar
 
 #reenvia los paquetes que estan en pos
 def reenviar(pos):
@@ -93,43 +93,43 @@ def reenviar(pos):
 	finally:
 		print >>sys.stderr, 'paquete reenviado'
 
-#metodo enviar
+def CheckTimeout(posInicial, posFinalVentana):
+	i = posInicial
+	while i < posFinalVentana:
+		if timeouts[i] + timeout < time.time():
+			reenviar(i)
+		i+=1
+
+#Loop de cliente
 try:
-	i = 0	
+	primeraCorrida = True
+	i = 0
 	llenarBufferSecuencia()
-#envia la ventana sacada de bufferSecuencia
-	while i < ventana:
-		dato = str((i,':',bufferSecuencia[posEnviar]))
-		print dato
-		sock.send(dato)
-		posEnviar += 1
-		if posEnviar >= tamanoSec:	#para que circule sobre bufferSecuencia
-			posEnviar = 0
-		i += 1 
 
-	espera =  time.time()
+	while caracteresEnviados < len(archivo):
+		k = 0
 
-#Espera que le lleguen los acks, si se cumple el timeout, volver a mandarlo
-#actualizar bufferSecuencia
-	j = 0
-	while time.time() < espera + timeout and j < ventana:
-		ready = select.select([sock], [], [], timeout)
+		while k < ventana:		#mientras hayan datos por enviar en la ventana
+			dato = str((posEnviar, ':', bufferSecuencia[posEnviar]))	#envia el numero de paquete y el caracter difinido en esa posicion
+			print dato
+			sock.send(dato)
+			timeouts[posEnviar] = time.time()	#se pone el timeout del dato recien enviados
+			posEnviar += 1
+			if posEnviar >= tamanoSec:	#para que circule
+				posEnviar = 0
+			k += 1
+
+		ready = select.select([sock], [], [], timeout)	#si se puede recibir
 		if ready[0]:
-			data = sock.recv(13)
-			if data: 
-				index = int(data[10])
-				if array[index] == False:	
-					print >>sys.stderr, 'llego "%s"'% data[10]	
-					array[index] = True
-					j += 1
-		else:
-			print >>sys.stderr, 'no recibio'
+    			if servidor_response:	#si hay respuesta
+					ack = int(servidor_response)	#guarda el ack
+					if array[ack] == False:		#si todavia no ha llegado ese ack
+						print >> sys.stderr, 'llego "%s"' %servidor_response
+						array[ack] = True
+						moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero qyue esta en False
 
-		if j < ventana: 
-			print >>sys.stderr, 'Timeout'	
-	
-		else:
-			print >>sys.stderr, 'No hubo timeout'	
+		CheckTimeout(posInicialVentana, ventana)
+		primeraCorrida = False
 
 finally:
 	print >>sys.stderr, 'cerrando socket'
