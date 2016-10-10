@@ -5,6 +5,8 @@ import sys
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 ventana = 5
+tamanoSec = ventana * 2
+array = [False for i in range(0,tamanoSec)]
 puerto = 10001
 
 # Enlace de socket y puerto
@@ -13,6 +15,22 @@ print >>sys.stderr, 'empezando a levantar %s puerto %s' % intermediario
 sock.bind(intermediario)
 
 sock.listen(1)
+
+
+def moverVentana(pos):
+    global posInicialVentana
+    acks = 0
+    i = 0
+    while i < ventana and array[pos] == True:   #cuenta cuantos acks se han recibido seguidos
+        acks += 1
+        pos += 1
+        if pos >= tamanoSec:
+            pos = 0
+        i += 1
+    posInicialVentana += acks   #corre la ventana el numero de acks recibidos
+    if posInicialVentana >= tamanoSec:  #que sea ciclico
+        posInicialVentana = posInicialVentana % tamanoSec
+
 
 def getSec(data):
     i =0
@@ -25,7 +43,7 @@ def getSec(data):
 
 text_file = open("MensajeRecibido.txt", "w")
 
-
+posInicialVentana = 0
 while True:
     # Esperando conexion
     print >>sys.stderr, 'Esperando para conectarse'
@@ -48,6 +66,10 @@ while True:
             print >>sys.stderr, 'recibido "%s"' % data
             if data:
             	sec = str(getSec(data))
+                if array[int(sec)] == False:
+                    array[int(sec)] = True
+                    moverVentana(posInicialVentana)
+
                 print >>sys.stderr, 'enviando ack ', sec
                 connection.send(str(sec)+'\n')
             else:
