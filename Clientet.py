@@ -79,6 +79,8 @@ def moverVentana(pos):
 	while i < ventana and array[pos] == True:	#cuenta cuantos acks se han recibido seguidos
 		acks += 1
 		pos += 1
+		if pos >= tamanoSec:
+			pos = 0
 		i += 1
 	posInicialVentana += acks	#corre la ventana el numero de acks recibidos
 	caracteresEnviados += acks 	#aumenta el numero de caracteres enviados
