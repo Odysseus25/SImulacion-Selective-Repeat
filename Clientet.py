@@ -32,6 +32,7 @@ caracteresEnviados = 0
 posInicialVentana = 0	#posicion inicial de la ventana
 cantidadMovida = 0		#cuanto se mueve la ventana
 posActualizar = 0
+archivoTerminado = False
 controladorEnviados = [False for i in range(0,tamanoSec)]	#maneja cuales posiciones han sido enviadas
 
 #tamano de la secuencia a enviar, de ella se enviara uncamente la ventana.
@@ -64,6 +65,9 @@ def actualizarBuffer(posInicial):
 	global controladorEnviados
 	global posActualArchivo
 	global posActualizar
+
+	if posActualArchivo > len(archivo):
+		archivoTerminado = True
 
 	i = 0
 	while i < cantidadMovida:		#actualiza las posiciones que ya tienen ack
@@ -130,7 +134,7 @@ try:
 	while caracteresEnviados < len(archivo):
 		k = 0
 
-		if primeraCorrida == False:
+		if primeraCorrida == False and archivoTerminado == False:
 			actualizarBuffer(posInicialVentana)
 
 		while k < ventana:		#mientras hayan datos por enviar en la ventana
