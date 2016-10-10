@@ -26,6 +26,7 @@ pos = 0
 posActualArchivo = 0	#donde estoy en el archivo original
 tamanoSec = ventana * 2
 posEnviar = 0	#posicion a enviar en la ventana
+timeouts = [False for i in range(0,tamanoSec)]
 array = [False for i in range(0,tamanoSec)]
 caracteresEnviados = 0
 posInicialVentana = 0
@@ -38,7 +39,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ('localhost', puerto)
 print >>sys.stderr, 'conectando a %s puerto %s' % server_address
 sock.connect(server_address)
-sock.setblocking(0)		
+#sock.setblocking(0)		
 
 
 #llena el buffer con los caracteres que siguen del archivo
@@ -110,7 +111,7 @@ try:
 		k = 0
 
 		while k < ventana:		#mientras hayan datos por enviar en la ventana
-			dato = str((posEnviar, ':', bufferSecuencia[posEnviar]))	#envia el numero de paquete y el caracter difinido en esa posicion
+			dato = str(str(posEnviar)+ ':' + str(bufferSecuencia[posEnviar])) + '\n' #envia el numero de paquete y el caracter difinido en esa posicion
 			print dato
 			sock.send(dato)
 			timeouts[posEnviar] = time.time()	#se pone el timeout del dato recien enviados
@@ -119,14 +120,21 @@ try:
 				posEnviar = 0
 			k += 1
 
-		ready = select.select([sock], [], [], timeout)	#si se puede recibir
-		if ready[0]:
-    			if servidor_response:	#si hay respuesta
-					ack = int(servidor_response)	#guarda el ack
-					if array[ack] == False:		#si todavia no ha llegado ese ack
-						print >> sys.stderr, 'llego "%s"' %servidor_response
-						array[ack] = True
-						moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero qyue esta en False
+		#ready = select.select([sock], [], [], timeout)	#si se puede recibir
+		#if ready[0]:
+			servidor_response = sock.recv(1) #recibe el ack del intermediario 
+			if servidor_response: #si hay respuesta 
+				rec =''
+				while servidor_response and servidor_response !='\n':
+					rec += 	servidor_response
+					servidor_response = sock.recv(1)
+
+				servidor_response = rec
+				ack = int(servidor_response)	#guarda el ack
+				if array[ack] == False:		#si todavia no ha llegado ese ack
+					print >> sys.stderr, 'llego "%s"' %servidor_response
+					array[ack] = True
+					moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero qyue esta en False
 
 		CheckTimeout(posInicialVentana, ventana)
 		primeraCorrida = False

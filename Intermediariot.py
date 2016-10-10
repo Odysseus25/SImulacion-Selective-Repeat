@@ -23,31 +23,44 @@ sock.bind(Cliente_address)
 sock.listen(1)
 
 def SendData():
-	try:
-		while True:
-		        data = connection.recv(13)
-		        if data: 
-		            print >>sys.stderr, 'recibido "%s"' % data
-		            sock_servidor.send(data)
-		            print >>sys.stderr, 'enviado'
+    try:
+    	while True:
+            data = connection.recv(1) #se reciben los datos
+            rec = ''
+            if data:
+                while data and data != '\n':
+                    rec += data
+                    data = connection.recv(1) 
 
-		        else:
-		            print >>sys.stderr, 'se acabo'
-		            break
-     	except Exception:
-        	import traceback
-        	print traceback.format_exc()
+            data = rec
+            if data:
+	            print >>sys.stderr, 'recibido "%s"' % data
+	            sock_servidor.send(data+'\n')
+	            print >>sys.stderr, 'enviado'
+            else:
+	            print >>sys.stderr, 'se acabo'
+	            break
+    except Exception:
+    	import traceback
+    	print traceback.format_exc()
 	            
 
 def ReceiveData():
    while True:
-        data = sock_servidor.recv(13)
+        data = sock_servidor.recv(1) #se reciben los datos
+        rec = ''
+        if data:
+            while data and data != '\n':
+                rec += data
+                data = sock_servidor.recv(1) 
+
+        data = rec
         if data:
             ran = random.randint(1, 100) #se busca un numero random entre 1 y 100, de ser mayor al numero de proba de perdida se envia 
-            print >>sys.stderr, 'ran = "%s"' % ran
+            #print >>sys.stderr, 'ran = "%s"' % ran
             if ran > proba_perdida:  
                 print >>sys.stderr, 'enviando ack al cliente "%s"' % data
-                connection.send(data)
+                connection.send(data + '\n')
             else:
                 print >>sys.stderr, 'se perdio el ack "%s"' % data
         else:

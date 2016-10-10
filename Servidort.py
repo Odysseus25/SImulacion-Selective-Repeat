@@ -14,26 +14,50 @@ sock.bind(intermediario)
 
 sock.listen(1)
 
+def getSec(data):
+    i =0
+    sec =''
+    while i < len(data) and data[i] != ':':
+        sec += data[i]
+        i+=1
+    return sec
+
+
+text_file = open("MensajeRecibido.txt", "w")
+
+
 while True:
     # Esperando conexion
     print >>sys.stderr, 'Esperando para conectarse'
-    connection, client_address = sock.accept()
+    connection, client_address = sock.accept() #se guarda en la variable connection la conexion al puerto
  
     try:
     	print >>sys.stderr, 'concexion desde', client_address
         while True:
-            data = connection.recv(13)
+            
+
+            data = connection.recv(1) #se reciben los datos
+            rec = ''
+            if data:
+                while data and data != '\n':
+                    rec += data
+                    data = connection.recv(1) 
+
+            data = rec
+            text_file.write(data + '\n')
             print >>sys.stderr, 'recibido "%s"' % data
             if data:
-            	ack = "ack ", str(data[1])
-                print >>sys.stderr, 'enviando ack ', ack
-                connection.sendall(str(ack))
+            	sec = str(getSec(data))
+                print >>sys.stderr, 'enviando ack ', sec
+                connection.send(str(sec)+'\n')
             else:
                 print >>sys.stderr, 'no hay mas datos', client_address
                 break
 
 
 
+
     finally:
         # Cerrando conexion
+        text_file.close()
         connection.close()
