@@ -4,17 +4,34 @@ import sys
 # Creando el socket TCP/IP
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+modo = 1
 ventana = 5
 tamanoSec = ventana * 2
 array = [False for i in range(0,tamanoSec)]
 puerto = 10001
 
+def EntradaDatos():#metodo encargado de recuperar los inputs
+    global ventana 
+    global archivo
+    global puerto
+    global modo
+    global timeout
+    puerto =  int(input('Digite el puerto del servidor:'))
+    ventana = int(input('Digite el tamano de la ventana:'))
+    modo = int(input('Digite 0 para modo normal, 1 para modo debug:'))
+
+
+EntradaDatos() #si se comenta el metodo se utilizaran valores por defecto
 # Enlace de socket y puerto
 intermediario = ('localhost', puerto)
 print >>sys.stderr, 'empezando a levantar %s puerto %s' % intermediario
 sock.bind(intermediario)
 
 sock.listen(1)
+
+def print_debug(data):
+    if(modo == 1):
+        print(data)
 
 
 def moverVentana(pos):
@@ -32,7 +49,7 @@ def moverVentana(pos):
         posInicialVentana = posInicialVentana % tamanoSec
 
 
-def getSec(data):
+def getSec(data): #metodo encargado de devolver la secuencia de un paquete
     i =0
     sec =''
     while i < len(data) and data[i] != ':':
@@ -63,23 +80,27 @@ while True:
 
             data = rec
             text_file.write(data + '\n')
-            print >>sys.stderr, 'recibido "%s"' % data
+
             if data:
             	sec = str(getSec(data))
                 if array[int(sec)] == False:
+                    print_debug ('recibido "%s"' % data)
                     array[int(sec)] = True
                     moverVentana(posInicialVentana)
+                else:
+                    print_debug ('recibido "%s"' % data)
 
-                print >>sys.stderr, 'enviando ack ', sec
+                print_debug("Enviando ack " + str(sec))
                 connection.send(str(sec)+'\n')
             else:
-                print >>sys.stderr, 'no hay mas datos', client_address
+                print_debug("No hay mas datos" + str(client_address))
+                text_file.close()
+                connection.close()
                 break
 
 
 
 
     finally:
-        # Cerrando conexion
         text_file.close()
         connection.close()
