@@ -33,6 +33,7 @@ posInicialVentana = 0	#posicion inicial de la ventana
 cantidadMovida = 0		#cuanto se mueve la ventana
 posActualizar = 0
 archivoTerminado = False
+archivoTerminadoDeMandar = False
 controladorEnviados = [False for i in range(0,tamanoSec)]	#maneja cuales posiciones han sido enviadas
 
 #tamano de la secuencia a enviar, de ella se enviara uncamente la ventana.
@@ -60,14 +61,15 @@ def llenarBufferSecuencia():
 #lo que esta a la izquierda de la ventana se puede descartar y actualizar
 #posInicial representa es la posicion donde inicia la ventana, o sea, posEnviar
 def actualizarBuffer(posInicial):
-	print('pos incial')
-	print(posInicial)
+	global archivoTerminado
 	global controladorEnviados
 	global posActualArchivo
 	global posActualizar
 
-	if posActualArchivo > len(archivo):
+	if posActualArchivo >= len(archivo):
 		archivoTerminado = True
+		print('arch ter')
+		print(archivoTerminado)
 
 	i = 0
 	while i < cantidadMovida:		#actualiza las posiciones que ya tienen ack
@@ -81,7 +83,7 @@ def actualizarBuffer(posInicial):
 		i += 1
 
     	#print (posActualArchivo)
-		print(bufferSecuencia)
+		#print(bufferSecuencia)
 
 #determina el numero de posiciones que la ventana se debe mover a la derecha
 #pos es la posicion donde inicia la ventana, o sea, posInicialVentana
@@ -92,12 +94,14 @@ def moverVentana(pos):
 	global cantidadMovida
 	global caracteresEnviados
 	global posEnviar
+	global array
 
 	cantidadMovida = 0
 	acks = 0
 	i = 0
 	while i < ventana and array[pos] == True:	#cuenta cuantos acks se han recibido seguidos
 		acks += 1
+		array[pos] = False		#resetea la bandera del ack de la posicion
 		pos += 1
 		if pos >= tamanoSec:
 			pos = 0
@@ -112,6 +116,7 @@ def moverVentana(pos):
 
 #reenvia los paquetes que estan en pos
 def reenviar(pos):
+	print('Reenviando paquete...')
 	try:
 		dato = str((pos,':',bufferSecuencia[pos]))
 		sock.send(dato)
@@ -119,6 +124,7 @@ def reenviar(pos):
 		print >>sys.stderr, 'paquete reenviado'
 
 def CheckTimeout(posInicial, posFinalVentana):
+	#print('verificando Timeout...')
 	i = posInicial
 	while i < posFinalVentana:
 		if timeouts[i] + timeout < time.time():
@@ -137,7 +143,10 @@ try:
 		if primeraCorrida == False and archivoTerminado == False:
 			actualizarBuffer(posInicialVentana)
 
-		while k < ventana:		#mientras hayan datos por enviar en la ventana
+		while k < ventana and archivoTerminadoDeMandar == False:		#mientras hayan datos por enviar en la ventana
+			if archivoTerminado == True:
+				archivoTerminadoDeMandar == True
+
 			if controladorEnviados[posEnviar] == False:
 				dato = str(str(posEnviar)+ ':' + str(bufferSecuencia[posEnviar])) + '\n' #envia el numero de paquete y el caracter difinido en esa posicion
 				print dato
@@ -150,8 +159,6 @@ try:
 				posEnviar = 0
 			k += 1
 
-		#ready = select.select([sock], [], [], timeout)	#si se puede recibir
-		#if ready[0]:
 		servidor_response = sock.recv(1) #recibe el ack del intermediario 
 		if servidor_response: #si hay respuesta 
 			rec =''
@@ -164,7 +171,7 @@ try:
 			if array[ack] == False:		#si todavia no ha llegado ese ack
 				print >> sys.stderr, 'llego "%s"' %servidor_response
 				array[ack] = True
-				moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero qyue esta en False
+				moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero que esta en False
 
 		#print ('cuantas veces hago esto')
 		CheckTimeout(posInicialVentana, ventana)
