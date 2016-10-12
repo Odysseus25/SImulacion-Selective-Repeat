@@ -18,7 +18,7 @@ cantidad= len(sys.argv)
 	#				timeout = sys.argv[5]
 
 ventana = 5
-archivo = "Hello-World, mucho te quiero"
+archivo = "Hello-World. Juan Carlos es una turra que no bretea y hace dinosaurios feos en UNITY"
 puerto = 10000
 modo = 0
 timeout = 3
@@ -53,9 +53,9 @@ def llenarBufferSecuencia():
 	for letra in range(0, tamanoSec):
 		bufferSecuencia[letra] = archivo[posActualArchivo]
 		posActualArchivo += 1 	
-		print (bufferSecuencia[letra])
+		#print (bufferSecuencia[letra])
 	
-    	print (posActualArchivo)
+    	#print (posActualArchivo)
 
 #actualiza el buffer de secuencia con nuevos datos para ser enviados
 #lo que esta a la izquierda de la ventana se puede descartar y actualizar

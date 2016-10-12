@@ -8,7 +8,7 @@ import thread
 port_cliente = 10000; 
 port_servidor = 10001; 
 
-proba_perdida = 0
+proba_perdida = 0.5
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
