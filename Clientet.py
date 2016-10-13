@@ -127,6 +127,7 @@ def reenviar(pos):
 	try:
 		dato = str(str(pos)+ ':' + str(bufferSecuencia[pos])) + '\n'
 		sock.send(dato)
+		timeouts[pos] = time.time()
 	finally:
 		pass
 
