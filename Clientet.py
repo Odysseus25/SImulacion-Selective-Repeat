@@ -39,7 +39,7 @@ def EntradaDatos():#metodo encargado de recuperar los inputs
 	modo = int(input('Digite 0 para modo normal, 1 para modo debug:'))
 	timeout = input('Digite el tiempo de timeout:')
 
-EntradaDatos()#si se comenta el metodo se utilizaran valores por defecto
+#EntradaDatos()#si se comenta el metodo se utilizaran valores por defecto
 #creacion del socket y conexion
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
 server_address = ('localhost', puerto)
@@ -118,6 +118,7 @@ def moverVentana(pos):
 	cantidadMovida += acks
 	if posInicialVentana >= tamanoSec:	#que sea ciclico
 		posInicialVentana = posInicialVentana % tamanoSec
+
 	posEnviar = posInicialVentana 	#actualiza la nueva posicion a mandar
 
 #reenvia los paquetes que estan en pos
@@ -129,13 +130,18 @@ def reenviar(pos):
 	finally:
 		pass
 
-def CheckTimeout(posInicial, posFinalVentana):
+def CheckTimeout(posInicial):
 	#print_debug('verificando Timeout...')
-	i = posInicial
-	while i < posFinalVentana:
-		if timeouts[i] + timeout < time.time():
+	global ventana
+	global tamanoSec
+	i = 0
+	while i < ventana:
+		if timeouts[posInicial] + timeout < time.time():
 			print_debug("Vencio timeout de paquete: " + str(i))
-			reenviar(i)
+			reenviar(posInicial)
+		posInicial += 1
+		if posInicial >= tamanoSec:
+			posInicial = 0
 		i+=1
 
 #Loop de cliente
@@ -160,7 +166,7 @@ try:
 				sock.send(dato)
 				controladorEnviados[posEnviar] = True
 				timeouts[posEnviar] = time.time()	#se pone el timeout del dato recien enviados
-			
+				
 			posEnviar += 1
 			if posEnviar >= tamanoSec:	#para que circule
 				posEnviar = 0
@@ -183,9 +189,9 @@ try:
 			if array[ack] == False:		#si todavia no ha llegado ese ack
 				print_debug("Recibiendo ack:" + str(servidor_response))
 				array[ack] = True
-				moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero que esta en False
-
-		CheckTimeout(posInicialVentana, ventana)
+		
+		moverVentana(posInicialVentana)		#mueve el valor de la posicion incial de la ventana al primero que esta en False
+		CheckTimeout(posInicialVentana)
 		primeraCorrida = False
 
 finally:

@@ -9,7 +9,7 @@ port_cliente = 10000;
 port_servidor = 10001; 
 
 modo = 0
-proba_perdida = 0 #Numero entre 0 y cien
+proba_perdida = 20 #Numero entre 0 y cien
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock_servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 Cliente_address = ('localhost', port_cliente)
@@ -28,7 +28,7 @@ def EntradaDatos(): #metodo encargado de recuperar los inputs
     modo = int(input('Digite 0 para modo normal, 1 para modo debug:'))
 
 
-EntradaDatos() #si se comenta el metodo se utilizaran valores por defecto
+#EntradaDatos() #si se comenta el metodo se utilizaran valores por defecto
 
 def getSec(data): #metodo encargado de devolver la secuencia de un paquete
     i =0
