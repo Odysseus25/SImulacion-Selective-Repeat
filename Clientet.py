@@ -5,11 +5,11 @@ import sys
 import socket
 import select
 
-ventana = 5
-archivo = "Hello-World. Hola mundo"
+ventana = 20
+archivo = "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
 puerto = 10000
 modo = 1
-timeout = 3
+timeout = 5
 pos = 0
 posActualArchivo = 0	#donde estoy en el archivo original
 tamanoSec = ventana * 2
@@ -23,6 +23,9 @@ posActualizar = 0
 archivoTerminado = False
 archivoTerminadoDeMandar = False
 controladorEnviados = [False for i in range(0,tamanoSec)]	#maneja cuales posiciones han sido enviadas
+
+paquetesReenviados = 0
+horaInicio = time.time()
 
 #tamano de la secuencia a enviar, de ella se enviara uncamente la ventana.
 bufferSecuencia = [None]*(tamanoSec)
@@ -123,10 +126,12 @@ def moverVentana(pos):
 
 #reenvia los paquetes que estan en pos
 def reenviar(pos):
+	global paquetesReenviados
 	print_debug("Reenviando paquete " + str(pos))
 	try:
 		dato = str(str(pos)+ ':' + str(bufferSecuencia[pos])) + '\n'
 		sock.send(dato)
+		paquetesReenviados += 1
 	finally:
 		pass
 
@@ -197,4 +202,10 @@ try:
 finally:
 	print("Concluyo la transferencia del archivo")
 	print >>sys.stderr, 'cerrando socket'
+	tiempoFinal = time.time()
+	horaFinal = tiempoFinal - horaInicio
+	print("Duracion: ")
+	print(horaFinal)
+	print("Paquetes reenviados")
+	print(paquetesReenviados)
 	sock.close()

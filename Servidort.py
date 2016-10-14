@@ -5,7 +5,7 @@ import sys
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 modo = 1
-ventana = 5
+ventana = 20
 tamanoSec = ventana * 2
 array = [False for i in range(0,tamanoSec)]
 puerto = 10001
