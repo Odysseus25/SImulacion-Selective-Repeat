@@ -8,7 +8,9 @@ modo = 1
 ventana = 20
 tamanoSec = ventana * 2
 array = [False for i in range(0,tamanoSec)]
+palabras = [str for i in range(0,tamanoSec)]
 puerto = 10001
+posPalabra = 0
 
 def EntradaDatos():#metodo encargado de recuperar los inputs
     global ventana 
@@ -34,12 +36,32 @@ def print_debug(data):
         print(data)
 
 
+#def save_palabras():
+#    global posPalabra
+#    global palabras
+#       if(array[i] == False):
+ #           break
+ #       text_file.write(palabras[i] + '\n')
+ #       i+=1
+
+def save_palabras():
+    global posPalabra
+    global palabras
+    while (array[i] != False):
+        text_file.write(palabras[i] + '\n')
+        i+=1
+
+
+       
+
 def moverVentana(pos):
     global posInicialVentana
     acks = 0
     i = 0
     while i < ventana and array[pos] == True:   #cuenta cuantos acks se han recibido seguidos
         acks += 1
+        array[pos] = False
+        text_file.write(palabras[pos] + '\n')
         pos += 1
         if pos >= tamanoSec:
             pos = 0
@@ -79,17 +101,22 @@ while True:
                     data = connection.recv(1) 
 
             data = rec
-            text_file.write(data + '\n')
+            #text_file.write(data + '\n')
 
             if data:
             	sec = str(getSec(data))
+                palabras[int(sec)] = data
                 if array[int(sec)] == False:
                     print_debug ('recibido "%s"' % data)
                     array[int(sec)] = True
-                    moverVentana(posInicialVentana)
+                    #palabras[int(sec)] = data
+                    #text_file.write(palabras[int(sec)] + '\n')
+                    
                 else:
-                    print_debug ('recibido "%s"' % data)
+                    array[int(sec)] = True
+                    print_debug ('recibido de nuevo "%s"' % data)
 
+                moverVentana(posInicialVentana)
                 print_debug("Enviando ack " + str(sec))
                 connection.send(str(sec)+'\n')
             else:

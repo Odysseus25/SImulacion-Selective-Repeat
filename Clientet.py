@@ -132,6 +132,7 @@ def reenviar(pos):
 		dato = str(str(pos)+ ':' + str(bufferSecuencia[pos])) + '\n'
 		sock.send(dato)
 		paquetesReenviados += 1
+		timeouts[pos] = time.time()
 	finally:
 		pass
 
