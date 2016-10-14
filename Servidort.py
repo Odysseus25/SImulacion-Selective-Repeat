@@ -23,7 +23,7 @@ def EntradaDatos():#metodo encargado de recuperar los inputs
     modo = int(input('Digite 0 para modo normal, 1 para modo debug:'))
 
 
-#EntradaDatos() #si se comenta el metodo se utilizaran valores por defecto
+EntradaDatos() #si se comenta el metodo se utilizaran valores por defecto
 # Enlace de socket y puerto
 intermediario = ('localhost', puerto)
 print >>sys.stderr, 'empezando a levantar %s puerto %s' % intermediario

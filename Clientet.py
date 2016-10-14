@@ -42,7 +42,7 @@ def EntradaDatos():#metodo encargado de recuperar los inputs
 	modo = int(input('Digite 0 para modo normal, 1 para modo debug:'))
 	timeout = input('Digite el tiempo de timeout:')
 
-#EntradaDatos()#si se comenta el metodo se utilizaran valores por defecto
+EntradaDatos()#si se comenta el metodo se utilizaran valores por defecto
 #creacion del socket y conexion
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)	
 server_address = ('localhost', puerto)
